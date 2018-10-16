@@ -1,4 +1,11 @@
 import cassiopeia as cass
+import logging
+import arrow
+import random
+import os
+import re
+
+from datetime import datetime
 from cassiopeia.core import Summoner, MatchHistory, Match, Champion
 from cassiopeia import Queue, Patch
 from cassiopeia.core.match import Participant, ParticipantStats
@@ -6,16 +13,19 @@ from sortedcontainers import SortedList
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
-import arrow
-import random
-import os
-import re
 
 target_host = os.getenv('DB_HOST', '')
 client = MongoClient(host=target_host, port=27017)
 db: Database = client.league_time
 
 cass.set_riot_api_key("")
+
+logging.basicConfig(level=logging.INFO, filename="gankeraidelog.out", format='%(levelname)s: %(message)s')
+
+curr_time = datetime.now()
+logging.info(
+    "{}-{}-{} {}:{} STARTING MINING OPERATION".format(curr_time.year, curr_time.month, curr_time.day, curr_time.hour,
+                                                      curr_time.minute))
 
 
 def filter_match_history(summoner, patch):
@@ -40,7 +50,7 @@ def collect_matches():
     pulled_match_ids = SortedList()
 
     while unpulled_summoner_ids:
-        print(len(unpulled_summoner_ids), "to go.")
+        logging.info(len(unpulled_summoner_ids), "to go.")
         new_summoner_id = random.choice(unpulled_summoner_ids)
         new_summoner = Summoner(id=new_summoner_id, region=region)
         matches = filter_match_history(new_summoner, patch)
@@ -169,9 +179,9 @@ def save_participant(participant: Participant, match):
                         kill_count += 1
         participant_stats["win"] = stats.win
         result = db_stats.insert_one(participant_stats)
-        print('Created {}'.format(result.inserted_id))
+        logging.info('Created {}'.format(result.inserted_id))
     else:
-        print(hash, "Already exists in DB.")
+        logging.info(hash, "Already exists in DB.")
 
 
 if __name__ == "__main__":
