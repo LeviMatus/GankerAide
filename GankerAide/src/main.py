@@ -16,7 +16,7 @@ from pymongo.collection import Collection
 
 target_host = os.getenv('DB_HOST', '')
 client = MongoClient(host=target_host, port=27017)
-db: Database = client.league_time
+db: Database = client.league_matches
 
 cass.set_riot_api_key("")
 
@@ -61,8 +61,21 @@ def collect_matches():
         while unpulled_match_ids:
             new_match_id = random.choice(unpulled_match_ids)
             new_match = Match(id=new_match_id, region=region)
+
+            team_1 = []
+            team_2 = []
+
             for participant in new_match.participants:
-                save_participant(participant, new_match)
+                participant_stats, team = process_participant(participant, new_match)
+
+                if team == "X":
+                    team_1.append(participant_stats)
+                elif team =='Y':
+                    team_2.append(participant_stats)
+
+                # TODO: complete team1, team2 filtering above.
+                # Aggregate teams 1 and 2 into complete data records
+
                 if participant.summoner.id not in pulled_summoner_ids and participant.summoner.id not in unpulled_summoner_ids:
                     unpulled_summoner_ids.add(participant.summoner.id)
             unpulled_match_ids.remove(new_match_id)
@@ -71,7 +84,7 @@ def collect_matches():
     client.close()
 
 
-def save_participant(participant: Participant, match):
+def process_participant(participant: Participant, match):
     db_stats: Collection = db.player_stats
 
     summoner: Summoner = participant.summoner
@@ -121,7 +134,6 @@ def save_participant(participant: Participant, match):
             "vision_score": stats.vision_score,
             "lane": participant.lane.name if participant.lane is not None else None,
             "role": role,
-            "team": participant.side.value,
             "spell_d": participant.summoner_spell_d.name,
             "spell_f": participant.summoner_spell_f.name,
             "items": [item.id if item is not None else None for item in stats.items],
@@ -177,11 +189,7 @@ def save_participant(participant: Participant, match):
                         participant_stats["{}kill-{}_x".format(key, kill_count)] = event.position.x
                         participant_stats["{}kill-{}_y".format(key, kill_count)] = event.position.y
                         kill_count += 1
-        participant_stats["win"] = stats.win
-        result = db_stats.insert_one(participant_stats)
-        logging.info('Created {}'.format(result.inserted_id))
-    else:
-        logging.info(hash, "Already exists in DB.")
+        return participant_stats, participant.side.value,
 
 
 if __name__ == "__main__":
