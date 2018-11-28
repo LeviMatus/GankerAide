@@ -18,7 +18,7 @@ target_host = os.getenv('DB_HOST', '')
 client = MongoClient(host=target_host, port=27017)
 db: Database = client.league_matches
 
-cass.set_riot_api_key("")
+cass.set_riot_api_key("RGAPI-9d4e9c42-b9dd-4561-a1ee-65a400df8b50")
 
 logging.basicConfig(level=logging.INFO, filename="gankeraidelog.out", format='%(levelname)s: %(message)s')
 
@@ -68,13 +68,12 @@ def collect_matches():
             for participant in new_match.participants:
                 participant_stats, team = process_participant(participant, new_match)
 
-                if team == "X":
+                if team == 100:
                     team_1.append(participant_stats)
-                elif team =='Y':
+                elif team == 200:
                     team_2.append(participant_stats)
 
-                # TODO: complete team1, team2 filtering above.
-                # Aggregate teams 1 and 2 into complete data records
+
 
                 if participant.summoner.id not in pulled_summoner_ids and participant.summoner.id not in unpulled_summoner_ids:
                     unpulled_summoner_ids.add(participant.summoner.id)
@@ -115,32 +114,31 @@ def process_participant(participant: Participant, match):
             role = None
 
         participant_stats = {
-            "_id": hash,
-            "rank": rank,
-            "champion_name": champion.name,
-            "champion_id": champion.id,
-            "kills": stats.kills,
-            "deaths": stats.deaths,
-            "assists": stats.assists,
-            "kda": stats.kda,
-            "cs": stats.total_minions_killed,
-            "income": stats.gold_earned,
-            "spending": stats.gold_spent,
-            "wards_used": stats.wards_placed,
-            "wards_denied": stats.wards_killed,
-            "v_wards_bought": stats.vision_wards_bought_in_game,
-            "s_wards_bought": stats.sight_wards_bought_in_game,
-            "wards_bought": stats.sight_wards_bought_in_game + stats.vision_wards_bought_in_game,
-            "vision_score": stats.vision_score,
-            "lane": participant.lane.name if participant.lane is not None else None,
-            "role": role,
-            "spell_d": participant.summoner_spell_d.name,
-            "spell_f": participant.summoner_spell_f.name,
-            "items": [item.id if item is not None else None for item in stats.items],
-            "perks": [perk.id for perk in list(participant.runes.keys())],
+            "{}_id".format(role): hash,
+            "{}_rank".format(role): rank,
+            "{}_champion_name".format(role): champion.name,
+            "{}_champion_id".format(role): champion.id,
+            "{}_kills".format(role): stats.kills,
+            "{}_deaths".format(role): stats.deaths,
+            "{}_assists".format(role): stats.assists,
+            "{}_kda".format(role): stats.kda,
+            "{}_cs".format(role): stats.total_minions_killed,
+            "{}_income".format(role): stats.gold_earned,
+            "{}_spending".format(role): stats.gold_spent,
+            "{}_wards_used".format(role): stats.wards_placed,
+            "{}_wards_denied".format(role): stats.wards_killed,
+            "{}_v_wards_bought".format(role): stats.vision_wards_bought_in_game,
+            "{}_s_wards_bought".format(role): stats.sight_wards_bought_in_game,
+            "{}_wards_bought".format(role): stats.sight_wards_bought_in_game + stats.vision_wards_bought_in_game,
+            "{}_vision_score".format(role): stats.vision_score,
+            "{}_lane".format(role): participant.lane.name if participant.lane is not None else None,
+            "{}_spell_d".format(role): participant.summoner_spell_d.name,
+            "{}_spell_f".format(role): participant.summoner_spell_f.name,
+            "{}_items".format(role): [item.id if item is not None else None for item in stats.items],
+            "{}_perks".format(role): [perk.id for perk in list(participant.runes.keys())],
         }
         for i, frame in enumerate(participant.timeline.frames[:-1]):
-            key = "{}_minutes_".format(i)
+            key = "{}_{}_minutes_".format(role, i)
             participant_stats["{}{}".format(key, "cs")] = frame.creep_score
             participant_stats["{}{}".format(key, "ncs")] = frame.neutral_minions_killed
             participant_stats["{}{}".format(key, "current_gold")] = frame.current_gold
