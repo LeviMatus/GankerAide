@@ -73,10 +73,15 @@ def collect_matches():
                 elif team == 200:
                     team_2.append(participant_stats)
 
-
-
                 if participant.summoner.id not in pulled_summoner_ids and participant.summoner.id not in unpulled_summoner_ids:
                     unpulled_summoner_ids.add(participant.summoner.id)
+
+            for team, tid in zip([team_1, team_2], [100, 200]):
+                team_stats = {"team_id": "{}-{}-{}".format(new_match.id, new_match.platform.value, tid)}
+                # TODO: aggregate average team stats here (gold per team, kills per team, etc)
+                # TODO: save team match here here
+
+
             unpulled_match_ids.remove(new_match_id)
             pulled_match_ids.add(new_match_id)
 
