@@ -68,7 +68,6 @@ def collect_matches():
             team_2_hash = "{}-{}-200".format(new_match.id, new_match.platform.value)
 
             if db_stats.find({"_id": team_1_hash}).count() == 0:
-
                 team_1_stats = {
                     "_id": team_1_hash,
                     "team_kills": 0,
@@ -139,13 +138,13 @@ def process_participant(participant: Participant, team_stats, match):
         else:
             rank = 'UNRANKED'
 
+    role = participant.timeline.lane.value
+
     if participant.role is not None:
-        if isinstance(participant.role, str):
-            role = participant.role
-        else:
-            role = participant.role.value
-    else:
-        role = None
+        if not isinstance(participant.role, str):
+            if "DUO" in participant.role.value:
+                role += participant.role.value
+
 
     participant_stats = {
         "{}_id".format(role): hash,
