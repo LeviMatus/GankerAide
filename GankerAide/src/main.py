@@ -103,10 +103,14 @@ def collect_matches():
                 }
 
                 for participant in new_match.participants:
+                    team_1_players = 0
+                    team_2_players = 0
                     if participant.side.value == 100:
-                        process_participant(participant, team_1_stats, new_match)
+                        team_1_players += 1
+                        process_participant(participant, team_1_stats, new_match, team_1_players)
                     elif participant.side.value == 200:
-                        process_participant(participant, team_2_stats, new_match)
+                        team_2_players += 1
+                        process_participant(participant, team_2_stats, new_match, team_2_players)
 
                     if participant.summoner.id not in pulled_summoner_ids and participant.summoner.id not in unpulled_summoner_ids:
                         unpulled_summoner_ids.add(participant.summoner.id)
@@ -119,7 +123,7 @@ def collect_matches():
     client.close()
 
 
-def process_participant(participant: Participant, team_stats, match):
+def process_participant(participant: Participant, team_stats, match, team_player_num):
     summoner: Summoner = participant.summoner
     champion: Champion = participant.champion
     stats: ParticipantStats = participant.stats
@@ -138,13 +142,13 @@ def process_participant(participant: Participant, team_stats, match):
         else:
             rank = 'UNRANKED'
 
-    role = participant.timeline.lane.value
-
-    if participant.role is not None:
-        if not isinstance(participant.role, str):
-            if "DUO" in participant.role.value:
-                role += participant.role.value
-
+    # role = participant.timeline.lane.value
+    #
+    # if participant.role is not None:
+    #     if not isinstance(participant.role, str):
+    #         if "DUO" in participant.role.value:
+    #             role += participant.role.value
+    role = team_player_num
 
     participant_stats = {
         "{}_id".format(role): hash,
