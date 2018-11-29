@@ -49,7 +49,7 @@ def collect_matches():
     unpulled_match_ids = SortedList()
     pulled_match_ids = SortedList()
 
-    db_stats: Collection = db.player_stats
+    db_stats: Collection = db.team_stats
 
     while unpulled_summoner_ids:
         logging.info(len(unpulled_summoner_ids), "to go.")
